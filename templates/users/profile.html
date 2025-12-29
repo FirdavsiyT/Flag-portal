@@ -1,146 +1,155 @@
-{% extends '../base.html' %}
+{% extends 'base.html' %}
 
 {% block header_title %}profile{% endblock %}
 
 {% block content %}
-<section class="max-w-4xl mx-auto fade-in">
-    <div class="glass-panel rounded-2xl border border-[#2c2f3b] overflow-visible mt-16 relative shadow-2xl">
-        <!-- Banner -->
-        <div class="h-32 md:h-40 bg-gradient-to-r from-[#111219] via-[#1a1c23] to-[#111219] rounded-t-2xl relative overflow-hidden">
-            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
-            <div class="absolute inset-0 bg-gradient-to-t from-[#13141b] to-transparent"></div>
-        </div>
-        
-        <div class="px-6 md:px-10 pb-10">
-            <div class="flex flex-col md:flex-row md:justify-between items-center md:items-end -mt-16 mb-8 gap-6 relative z-10">
-                <div class="flex flex-col md:flex-row items-center md:items-end gap-6 text-center md:text-left">
-                    <div class="w-32 h-32 md:w-36 md:h-36 hexagon bg-[#13141b] p-2 relative shadow-2xl">
-                         <div class="w-full h-full hexagon bg-[#9fef00] flex items-center justify-center p-[3px]">
-                            <div class="w-full h-full hexagon bg-[#1a1c23] overflow-hidden">
-                                <img src="{{ user.avatar_url }}" alt="Avatar" class="w-full h-full object-cover">
-                            </div>
-                         </div>
-                         <div class="absolute bottom-0 right-0 bg-[#13141b] rounded-full p-1 border border-[#2c2f3b]">
-                             <div class="w-4 h-4 bg-[#9fef00] rounded-full border-2 border-[#13141b]"></div>
-                         </div>
-                    </div>
-                    <div class="pb-2">
-                        <h2 class="text-3xl font-bold text-white tracking-tight mb-1">{{ user.username }}</h2>
-                    </div>
-                </div>
-            </div>
+<section class="max-w-6xl mx-auto fade-in pb-12">
+    <!-- Header Info -->
+    <div class="glass-panel p-8 rounded-2xl flex flex-col md:flex-row items-center gap-8 mb-8 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-[#9fef00]/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
 
-            <!-- Stats Grid -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6">
-                <div class="glass-panel p-4 rounded-xl text-center border border-[#2c2f3b] hover:border-[#9fef00]/30 transition-colors">
-                    <div class="text-3xl font-bold text-white font-mono tracking-tighter">{{ score }}</div>
-                    <div class="text-[10px] text-[#5a6278] uppercase font-bold mt-1 tracking-widest">Points</div>
-                </div>
-                <div class="glass-panel p-4 rounded-xl text-center border border-[#2c2f3b] hover:border-[#9fef00]/30 transition-colors">
-                    <div class="text-3xl font-bold text-white font-mono tracking-tighter">#{{ rank }}</div>
-                    <div class="text-[10px] text-[#5a6278] uppercase font-bold mt-1 tracking-widest">Global Rank</div>
-                </div>
-                 <div class="glass-panel p-4 rounded-xl text-center border border-[#2c2f3b] hover:border-[#9fef00]/30 transition-colors">
-                    <div class="text-3xl font-bold text-white font-mono tracking-tighter">{{ flags_count }}</div>
-                    <div class="text-[10px] text-[#5a6278] uppercase font-bold mt-1 tracking-widest">Flags</div>
-                </div>
-                 <div class="glass-panel p-4 rounded-xl text-center border border-[#2c2f3b] hover:border-[#9fef00]/30 transition-colors">
-                    <div class="text-3xl font-bold text-white font-mono tracking-tighter">{{ accuracy }}</div>
-                    <div class="text-[10px] text-[#5a6278] uppercase font-bold mt-1 tracking-widest">Accuracy</div>
-                </div>
+        <div class="relative group">
+            <div class="w-32 h-32 rounded-2xl bg-[#13141b] border-2 border-[#9fef00]/50 p-1 relative z-10 overflow-hidden shadow-[0_0_20px_rgba(159,239,0,0.2)]">
+                <img src="{{ user.avatar_url }}" alt="Avatar" class="w-full h-full object-cover rounded-xl">
+            </div>
+            <div class="absolute -bottom-2 -right-2 bg-[#9fef00] text-black text-xs font-bold px-2 py-1 rounded-md shadow-lg z-20">LVL {{ rank }}</div>
+        </div>
+
+        <div class="flex-1 text-center md:text-left z-10">
+            <h1 class="text-3xl font-bold text-white mb-2 tracking-tight">{{ user.username }}</h1>
+            <div class="flex flex-wrap justify-center md:justify-start gap-3">
+                <span class="px-3 py-1 rounded bg-white/5 border border-white/10 text-[#5a6278] text-xs font-mono uppercase">{{ user.email }}</span>
+                {% if user.is_superuser %}
+                <span class="px-3 py-1 rounded bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold uppercase tracking-wider">Admin</span>
+                {% else %}
+                <span class="px-3 py-1 rounded bg-[#9fef00]/10 border border-[#9fef00]/20 text-[#9fef00] text-xs font-bold uppercase tracking-wider">Hacker</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="flex gap-6 z-10">
+            <div class="text-center">
+                <div class="text-2xl font-bold text-white font-mono">{{ score }}</div>
+                <div class="text-[10px] text-[#5a6278] uppercase font-bold tracking-widest">Score</div>
+            </div>
+            <div class="w-px bg-[#2c2f3b]"></div>
+            <div class="text-center">
+                <div class="text-2xl font-bold text-white font-mono">{{ rank }}</div>
+                <div class="text-[10px] text-[#5a6278] uppercase font-bold tracking-widest">Rank</div>
+            </div>
+            <div class="w-px bg-[#2c2f3b]"></div>
+             <div class="text-center">
+                <div class="text-2xl font-bold text-white font-mono">{{ accuracy }}</div>
+                <div class="text-[10px] text-[#5a6278] uppercase font-bold tracking-widest">Acc</div>
             </div>
         </div>
     </div>
 
-    <!-- Account Security Section Split -->
-    <div class="grid grid-cols-2 gap-6 mt-8">
-        
-        <!-- Email Settings -->
-        <div class="glass-panel rounded-xl p-6 border border-[#2c2f3b] shadow-xl flex flex-col h-full">
-            <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                <i data-lucide="mail" class="w-5 h-5 text-[#9fef00]"></i>
-                Email Settings
-            </h3>
-            <form method="POST" class="flex-1 flex flex-col gap-5">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="update_email">
-                
-                <div>
-                    <label class="block text-[10px] font-bold text-[#5a6278] uppercase tracking-widest mb-2">New Email Address</label>
-                    <div class="input-group flex bg-[#13141b] border border-[#2c2f3b] rounded transition-colors overflow-hidden focus-within:border-[#9fef00] focus-within:shadow-[0_0_0_1px_#9fef00]">
-                        <div class="px-3 py-3 border-r border-[#2c2f3b] bg-[#1a1c23] text-[#5a6278]">
-                            <i data-lucide="mail" class="w-4 h-4"></i>
-                        </div>
-                        <input type="email" name="email" value="{{ user.email }}" placeholder="user@example.com" required class="w-full bg-transparent text-white text-sm px-4 py-3 focus:outline-none font-mono">
-                    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <!-- Left Column: Avatar Selection -->
+        <div class="lg:col-span-2 space-y-8">
+            <div class="glass-panel p-1 rounded-2xl border border-[#2c2f3b]">
+                <div class="p-4 border-b border-[#2c2f3b] flex items-center justify-between">
+                    <h3 class="font-bold text-white flex items-center gap-2">
+                        <i data-lucide="smile" class="w-5 h-5 text-[#9fef00]"></i> Avatar Selection
+                    </h3>
+                    <span class="text-[10px] text-[#5a6278] uppercase font-bold tracking-widest">Pick your character</span>
                 </div>
 
-                <div>
-                    <label class="block text-[10px] font-bold text-[#5a6278] uppercase tracking-widest mb-2">Current Password</label>
-                    <div class="input-group flex bg-[#13141b] border border-[#2c2f3b] rounded transition-colors overflow-hidden focus-within:border-[#9fef00] focus-within:shadow-[0_0_0_1px_#9fef00]">
-                        <div class="px-3 py-3 border-r border-[#2c2f3b] bg-[#1a1c23] text-[#5a6278]">
-                            <i data-lucide="lock" class="w-4 h-4"></i>
-                        </div>
-                        <input type="password" name="password" placeholder="Confirm with password" required class="w-full bg-transparent text-white text-sm px-4 py-3 focus:outline-none font-mono">
+                <div class="p-6">
+                    <form method="POST" id="avatar-form" class="hidden">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="update_avatar">
+                        <input type="hidden" name="avatar_url" id="avatar-input">
+                    </form>
+
+                    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                        <!-- Ручной список, так как нет фильтра split -->
+                         <script>
+                            const avatars = ['Felix', 'Aneka', 'Zack', 'Midnight', 'Shadow', 'Cyber', 'Glitch', 'Neo', 'Flux', 'Echo', 'Byte', 'Pixel', 'Vortex', 'Spark', 'Nova'];
+                            const currentAvatar = "{{ user.avatar_url }}";
+
+                            avatars.forEach(seed => {
+                                const url = `https://api.dicebear.com/7.x/bottts/svg?seed=${seed}`;
+                                const isSelected = currentAvatar === url;
+                                const borderClass = isSelected ? 'border-[#9fef00] shadow-[0_0_15px_rgba(159,239,0,0.3)] scale-105' : 'border-[#2c2f3b] hover:border-[#9fef00]/50 hover:scale-105';
+                                const checkmark = isSelected ? '<div class="absolute top-1 right-1 bg-[#9fef00] rounded-full p-0.5"><i data-lucide="check" class="w-3 h-3 text-black font-bold"></i></div>' : '';
+
+                                document.write(`
+                                    <div onclick="selectAvatar('${url}')"
+                                         class="cursor-pointer group relative aspect-square rounded-xl bg-[#13141b] border-2 transition-all duration-300 overflow-hidden ${borderClass}">
+                                        <img src="${url}" class="w-full h-full object-cover">
+                                        ${checkmark}
+                                    </div>
+                                `);
+                            });
+                        </script>
                     </div>
                 </div>
-                
-                <div class="mt-auto pt-4 flex justify-end">
-                    <button type="submit" class="bg-[#9fef00] hover:bg-[#8cd600] text-[#13141b] font-bold px-6 py-2.5 rounded text-sm uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(159,239,0,0.2)] hover:shadow-[0_0_25px_rgba(159,239,0,0.4)]">
-                        Update Email
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
 
-        <!-- Password Settings -->
-        <div class="glass-panel rounded-xl p-6 border border-[#2c2f3b] shadow-xl flex flex-col h-full">
-            <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                <i data-lucide="lock" class="w-5 h-5 text-[#9fef00]"></i>
-                Security
-            </h3>
-            <form method="POST" class="flex-1 flex flex-col gap-5">
-                 {% csrf_token %}
-                 <input type="hidden" name="action" value="update_password">
+        <!-- Right Column: Settings -->
+        <div class="space-y-6">
+             <!-- Email Update -->
+             <div class="glass-panel p-6 rounded-xl border border-[#2c2f3b]">
+                <h3 class="font-bold text-white mb-4 text-sm uppercase tracking-wider">Account Settings</h3>
+                <form method="POST" class="space-y-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_email">
 
-                 <div>
-                    <label class="block text-[10px] font-bold text-[#5a6278] uppercase tracking-widest mb-2">Current Password</label>
-                    <div class="input-group flex bg-[#13141b] border border-[#2c2f3b] rounded transition-colors overflow-hidden focus-within:border-[#9fef00] focus-within:shadow-[0_0_0_1px_#9fef00]">
-                        <div class="px-3 py-3 border-r border-[#2c2f3b] bg-[#1a1c23] text-[#5a6278]">
-                            <i data-lucide="unlock" class="w-4 h-4"></i>
+                    <div>
+                        <label class="text-[10px] font-bold text-[#5a6278] uppercase tracking-widest mb-1 block">New Email</label>
+                        <div class="flex items-center bg-[#13141b] border border-[#2c2f3b] rounded-lg px-3 py-2 focus-within:border-[#9fef00]/50 transition-colors">
+                            <i data-lucide="mail" class="w-4 h-4 text-[#5a6278] mr-3"></i>
+                            <input type="email" name="email" value="{{ user.email }}" class="bg-transparent text-sm text-white w-full focus:outline-none font-mono placeholder-[#2c2f3b]" placeholder="user@example.com">
                         </div>
-                        <input type="password" name="current_password" placeholder="••••••••" required class="w-full bg-transparent text-white text-sm px-4 py-3 focus:outline-none font-mono">
                     </div>
-                </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-[#5a6278] uppercase tracking-widest mb-1 block">Current Password</label>
+                        <div class="flex items-center bg-[#13141b] border border-[#2c2f3b] rounded-lg px-3 py-2 focus-within:border-[#9fef00]/50 transition-colors">
+                            <i data-lucide="lock" class="w-4 h-4 text-[#5a6278] mr-3"></i>
+                            <input type="password" name="password" class="bg-transparent text-sm text-white w-full focus:outline-none font-mono" placeholder="Confirm changes">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-[#2c2f3b] hover:bg-[#9fef00] hover:text-black text-white font-bold py-2 rounded-lg text-xs uppercase tracking-wider transition-all">Update Email</button>
+                </form>
+            </div>
 
-                 <div>
-                    <label class="block text-[10px] font-bold text-[#5a6278] uppercase tracking-widest mb-2">New Password</label>
-                    <div class="input-group flex bg-[#13141b] border border-[#2c2f3b] rounded transition-colors overflow-hidden focus-within:border-[#9fef00] focus-within:shadow-[0_0_0_1px_#9fef00]">
-                        <div class="px-3 py-3 border-r border-[#2c2f3b] bg-[#1a1c23] text-[#5a6278]">
-                            <i data-lucide="key" class="w-4 h-4"></i>
-                        </div>
-                        <input type="password" name="new_password" placeholder="••••••••" required class="w-full bg-transparent text-white text-sm px-4 py-3 focus:outline-none font-mono">
-                    </div>
-                </div>
-                
-                <!-- Confirm New Password (Optional, logic not implemented in view for simplicity but field is here) -->
-                <div>
-                    <label class="block text-[10px] font-bold text-[#5a6278] uppercase tracking-widest mb-2">Confirm Password</label>
-                    <div class="input-group flex bg-[#13141b] border border-[#2c2f3b] rounded transition-colors overflow-hidden focus-within:border-[#9fef00] focus-within:shadow-[0_0_0_1px_#9fef00]">
-                        <div class="px-3 py-3 border-r border-[#2c2f3b] bg-[#1a1c23] text-[#5a6278]">
-                            <i data-lucide="check-circle" class="w-4 h-4"></i>
-                        </div>
-                        <input type="password" placeholder="••••••••" class="w-full bg-transparent text-white text-sm px-4 py-3 focus:outline-none font-mono">
-                    </div>
-                </div>
+            <!-- Password Update -->
+             <div class="glass-panel p-6 rounded-xl border border-[#2c2f3b]">
+                <h3 class="font-bold text-white mb-4 text-sm uppercase tracking-wider">Security</h3>
+                <form method="POST" class="space-y-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_password">
 
-                 <div class="mt-auto pt-4 flex justify-end">
-                    <button type="submit" class="bg-[#9fef00] hover:bg-[#8cd600] text-[#13141b] font-bold px-6 py-2.5 rounded text-sm uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(159,239,0,0.2)] hover:shadow-[0_0_25px_rgba(159,239,0,0.4)]">
-                        Update Password
-                    </button>
-                 </div>
-            </form>
+                    <div>
+                        <label class="text-[10px] font-bold text-[#5a6278] uppercase tracking-widest mb-1 block">Current Password</label>
+                         <div class="flex items-center bg-[#13141b] border border-[#2c2f3b] rounded-lg px-3 py-2 focus-within:border-[#9fef00]/50 transition-colors">
+                            <i data-lucide="key" class="w-4 h-4 text-[#5a6278] mr-3"></i>
+                            <input type="password" name="current_password" class="bg-transparent text-sm text-white w-full focus:outline-none font-mono">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-[#5a6278] uppercase tracking-widest mb-1 block">New Password</label>
+                        <div class="flex items-center bg-[#13141b] border border-[#2c2f3b] rounded-lg px-3 py-2 focus-within:border-[#9fef00]/50 transition-colors">
+                            <i data-lucide="lock" class="w-4 h-4 text-[#5a6278] mr-3"></i>
+                            <input type="password" name="new_password" class="bg-transparent text-sm text-white w-full focus:outline-none font-mono">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-[#2c2f3b] hover:bg-[#9fef00] hover:text-black text-white font-bold py-2 rounded-lg text-xs uppercase tracking-wider transition-all">Change Password</button>
+                </form>
+            </div>
         </div>
     </div>
 </section>
+
+<script>
+    function selectAvatar(url) {
+        document.getElementById('avatar-input').value = url;
+        document.getElementById('avatar-form').submit();
+    }
+</script>
+
 {% endblock %}

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block header_title %}login{% endblock %}
+
+{% block content %}
+<section class="max-w-md mx-auto fade-in py-12">
+    <div class="glass-panel p-8 rounded-2xl border border-[#2c2f3b] shadow-2xl relative overflow-hidden">
+        <!-- Декоративный фон -->
+        <div class="absolute top-0 right-0 w-32 h-32 bg-[#9fef00]/5 rounded-full blur-[50px] -translate-y-1/2 translate-x-1/2"></div>
+        
+        <div class="text-center mb-8 relative z-10">
+            <h2 class="text-3xl font-bold text-white mb-2 tracking-tight">Access Protocol</h2>
+            <p class="text-[#5a6278] text-xs uppercase font-bold tracking-widest">Verify your identity</p>
+        </div>
+
+        <form method="POST" class="space-y-5 relative z-10">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+            <div class="bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-3 rounded-lg text-xs flex items-center gap-2">
+                <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                <span>Invalid credentials. Access denied.</span>
+            </div>
+            {% endif %}
+
+            <div>
+                <label class="block text-[10px] font-bold text-[#5a6278] uppercase tracking-widest mb-1.5">Username</label>
+                <div class="flex items-center bg-[#13141b] border border-[#2c2f3b] rounded-lg px-3 py-2.5 focus-within:border-[#9fef00]/50 transition-colors group">
+                    <i data-lucide="user" class="w-4 h-4 text-[#5a6278] mr-3 group-focus-within:text-[#9fef00] transition-colors"></i>
+                    <input type="text" name="username" required autofocus class="bg-transparent text-sm text-white w-full focus:outline-none font-mono placeholder-[#2c2f3b]" placeholder="Enter username">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-[#5a6278] uppercase tracking-widest mb-1.5">Password</label>
+                <div class="flex items-center bg-[#13141b] border border-[#2c2f3b] rounded-lg px-3 py-2.5 focus-within:border-[#9fef00]/50 transition-colors group">
+                    <i data-lucide="lock" class="w-4 h-4 text-[#5a6278] mr-3 group-focus-within:text-[#9fef00] transition-colors"></i>
+                    <input type="password" name="password" required class="bg-transparent text-sm text-white w-full focus:outline-none font-mono" placeholder="••••••••">
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-[#9fef00] hover:bg-[#8cd600] text-black font-bold py-3 rounded-lg text-sm uppercase tracking-wider transition-all mt-6 shadow-[0_0_20px_rgba(159,239,0,0.3)] hover:shadow-[0_0_30px_rgba(159,239,0,0.5)] flex items-center justify-center gap-2 group">
+                <span>Authenticate</span>
+                <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+            </button>
+        </form>
+
+        <div class="text-center mt-6 pt-6 border-t border-[#2c2f3b] relative z-10">
+            <p class="text-[#5a6278] text-xs">New to the system?</p>
+            <a href="{% url 'register' %}" class="text-[#9fef00] text-xs font-bold uppercase tracking-wider hover:underline mt-1 block">Initialize Registration</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

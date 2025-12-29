@@ -12,7 +12,6 @@
         <div class="glass-panel p-1.5 rounded-lg flex gap-1 overflow-x-auto max-w-full no-scrollbar shadow-lg">
             <button onclick="filterCategory('all')" class="cat-btn active px-5 py-2 rounded-md text-xs font-bold transition-all bg-[#9fef00] text-black shadow-[0_0_15px_rgba(159,239,0,0.3)] whitespace-nowrap focus:outline-none select-none" data-cat="all">ALL</button>
             {% for cat in categories %}
-            <!-- Используем cat.name вместо cat.slug -->
             <button onclick="filterCategory('{{ cat.name }}')" class="cat-btn px-5 py-2 rounded-md text-xs font-bold transition-all text-[#9ca3af] hover:text-white hover:bg-white/10 whitespace-nowrap focus:outline-none select-none" data-cat="{{ cat.name }}">{{ cat.name|upper }}</button>
             {% endfor %}
         </div>
@@ -33,6 +32,7 @@
                          <span id="modal-cat" class="px-2 py-0.5 rounded bg-white/5 text-[#9ca3af] border border-white/5">Web</span>
                          <span id="modal-pts" class="text-[#9fef00] text-glow">100 Pts</span>
                          <span id="modal-diff" class="text-white">Easy</span>
+                         <span id="modal-attempts" class="text-[#5a6278] ml-2 font-mono"></span>
                      </div>
                  </div>
             </div>
@@ -56,9 +56,15 @@
                     </div>
                     <p id="feedback-msg" class="text-xs mt-3 h-4 font-mono font-bold pl-1"></p>
                 </div>
+
                 <div id="modal-solved" class="hidden text-center py-6 bg-[#9fef00]/5 rounded-lg border border-[#9fef00]/20 animate-pulse mb-8">
                     <span class="text-[#9fef00] font-bold flex items-center justify-center gap-2 text-lg"><i data-lucide="check-circle" class="w-6 h-6"></i> System Compromised</span>
                 </div>
+                 <div id="modal-failed" class="hidden text-center py-6 bg-red-500/5 rounded-lg border border-red-500/20 animate-pulse mb-8">
+                    <span class="text-red-500 font-bold flex items-center justify-center gap-2 text-lg"><i data-lucide="x-circle" class="w-6 h-6"></i> Mission Failed</span>
+                    <p class="text-red-400/60 text-xs mt-2">Maximum attempts reached. Access denied.</p>
+                </div>
+
             </div>
             <div id="tab-solves" class="hidden"><div id="solves-list" class="space-y-2"></div></div>
         </div>
@@ -66,7 +72,6 @@
     </div>
 </div>
 
-<!-- Безопасная передача данных из Django в JS -->
 {{ challenges_data|json_script:"challenges-data" }}
 {{ categories_json|json_script:"categories-data" }}
 
@@ -74,18 +79,39 @@
 
 {% block scripts %}
 <script>
-    const challenges = JSON.parse(document.getElementById('challenges-data').textContent);
-    const categoriesMeta = JSON.parse(document.getElementById('categories-data').textContent);
+    let challenges = [];
+    let categoriesMeta = {};
     let currentCat = 'all';
     let activeId = null;
 
-    document.addEventListener('DOMContentLoaded', () => { renderChallenges(); });
+    document.addEventListener('DOMContentLoaded', () => {
+        const challengesEl = document.getElementById('challenges-data');
+        const categoriesEl = document.getElementById('categories-data');
+
+        if (challengesEl) {
+            try {
+                challenges = JSON.parse(challengesEl.textContent);
+            } catch (e) {
+                console.error("Error parsing challenges data:", e);
+            }
+        }
+
+        if (categoriesEl) {
+            try {
+                const raw = JSON.parse(categoriesEl.textContent);
+                categoriesMeta = (typeof raw === 'string') ? JSON.parse(raw) : raw;
+            } catch (e) {
+                console.error("Error parsing categories data:", e);
+            }
+        }
+
+        renderChallenges();
+    });
 
     function renderChallenges() {
         const grid = document.getElementById('challenges-grid');
         grid.innerHTML = '';
         const list = currentCat === 'all' ? challenges : challenges.filter(c => c.category === currentCat);
-        // Используем имя категории для группировки
         const categoriesInList = [...new Set(list.map(c => c.category))];
 
         if (categoriesInList.length === 0) {
@@ -95,7 +121,6 @@
 
         categoriesInList.forEach(catName => {
             const catChallenges = list.filter(c => c.category === catName);
-            // Ищем метаданные по имени
             const catInfo = categoriesMeta[catName] || { name: catName, icon: 'folder' };
 
             const sectionHTML = `
@@ -118,13 +143,68 @@
 
     function createChallengeCard(c, index) {
         const diffColor = c.difficulty === 'Easy' ? 'text-green-500' : c.difficulty === 'Medium' ? 'text-yellow-500' : 'text-red-500';
+
+        let borderClass = '';
+        let bgClass = '';
+        let statusColor = '';
+        let statusText = '';
+        let progressColor = '';
+        let solvedIcon = '';
+        let failedIcon = '';
+
+        if (c.failed) {
+            borderClass = 'border-red-500/50 hover:border-red-500';
+            bgClass = 'bg-red-500/5';
+            statusColor = 'text-red-500';
+            statusText = 'FAILED';
+            progressColor = 'bg-red-500 shadow-[0_0_10px_#ef4444]';
+            failedIcon = '<div class="absolute right-0 top-0 w-0 h-0 border-t-[40px] border-l-[40px] border-t-red-500 border-l-transparent z-10 shadow-lg"><i data-lucide="x" class="absolute -top-[36px] -left-[16px] w-3.5 h-3.5 text-black font-bold"></i></div>';
+        } else if (c.solved) {
+            borderClass = 'border-[#9fef00]/50 hover:border-[#9fef00]';
+            bgClass = 'bg-[#9fef00]/5';
+            statusColor = 'text-[#9fef00]';
+            statusText = 'PWNED';
+            progressColor = 'bg-[#9fef00] shadow-[0_0_10px_#9fef00]';
+            solvedIcon = '<div class="absolute right-0 top-0 w-0 h-0 border-t-[40px] border-l-[40px] border-t-[#9fef00] border-l-transparent z-10 shadow-lg"><i data-lucide="check" class="absolute -top-[36px] -left-[16px] w-3.5 h-3.5 text-black font-bold"></i></div>';
+        } else {
+            borderClass = 'border-[#2c2f3b] hover:border-[#9fef00]/30';
+            bgClass = 'bg-[#1a1c23]';
+            statusColor = 'text-[#5a6278]';
+            statusText = 'ACTIVE';
+            progressColor = 'bg-[#2c2f3b]';
+        }
+
+        // Логика отображения попыток
+        let attemptsStr = '';
+        if (!c.solved && !c.failed) {
+            if (c.max_attempts > 0) {
+                attemptsStr = `${c.attempts}/${c.max_attempts}`;
+            } else {
+                attemptsStr = `${c.attempts}/∞`;
+            }
+        }
+
+        const attemptsBadge = attemptsStr ? `
+            <span class="text-[#5a6278] font-mono text-[10px] tracking-tight bg-[#13141b] px-1.5 py-0.5 rounded border border-[#2c2f3b] flex items-center gap-1 ml-auto mr-2">
+                <i data-lucide="hash" class="w-3 h-3"></i> ${attemptsStr}
+            </span>
+        ` : '<div class="ml-auto"></div>';
+
+
         return `
-            <div onclick="openModal(${c.id})" style="animation-delay: ${index * 0.05}s" class="challenge-card animate-card rounded-xl p-6 cursor-pointer group flex flex-col h-full bg-[#1a1c23] border border-[#2c2f3b] hover:border-[#9fef00]/30 transition-all">
-                 ${c.solved ? '<div class="absolute right-0 top-0 w-0 h-0 border-t-[40px] border-l-[40px] border-t-[#9fef00] border-l-transparent z-10 shadow-lg"><i data-lucide="check" class="absolute -top-[36px] -left-[16px] w-3.5 h-3.5 text-black font-bold"></i></div>' : ''}
+            <div onclick="openModal(${c.id})" style="animation-delay: ${index * 0.05}s" class="challenge-card animate-card rounded-xl p-6 cursor-pointer group flex flex-col h-full ${bgClass} border ${borderClass} transition-all relative overflow-hidden">
+                 ${solvedIcon}
+                 ${failedIcon}
                  <div class="flex items-start justify-end mb-4"><div class="text-right"><div class="text-xl font-bold text-white font-mono tracking-tight">${c.points}</div><div class="text-[10px] text-[#5a6278] uppercase font-bold tracking-wider">PTS</div></div></div>
-                 <h4 class="text-white font-bold text-lg mb-6 truncate group-hover:text-[#9fef00] transition-colors tracking-tight">${c.title}</h4>
-                 <div class="mt-auto"><div class="w-full bg-[#13141b] h-1.5 rounded-full mb-3 overflow-hidden border border-white/5"><div class="h-full rounded-full ${c.solved ? 'bg-[#9fef00] w-full shadow-[0_0_10px_#9fef00]' : 'bg-[#2c2f3b] w-0'} transition-all duration-700 ease-out"></div></div>
-                 <div class="flex items-center justify-between text-xs font-medium"><span class="${diffColor} px-2 py-0.5 rounded bg-white/5 border border-white/5">${c.difficulty}</span><span class="${c.solved ? 'text-[#9fef00]' : 'text-[#5a6278]'} uppercase text-[10px] font-bold tracking-wider">${c.solved ? 'PWNED' : 'ACTIVE'}</span></div></div>
+                 <h4 class="text-white font-bold text-lg mb-6 truncate group-hover:text-white transition-colors tracking-tight">${c.title}</h4>
+                 <div class="mt-auto">
+                    <div class="w-full bg-[#13141b] h-1.5 rounded-full mb-3 overflow-hidden border border-white/5"><div class="h-full rounded-full ${c.solved || c.failed ? 'w-full' : 'w-0'} ${progressColor} transition-all duration-700 ease-out"></div></div>
+                    <div class="flex items-center justify-between text-xs font-medium">
+                        <span class="${diffColor} px-2 py-0.5 rounded bg-white/5 border border-white/5">${c.difficulty}</span>
+                        ${attemptsBadge}
+                        <span class="${statusColor} uppercase text-[10px] font-bold tracking-wider">${statusText}</span>
+                    </div>
+                 </div>
             </div>`;
     }
 
@@ -147,25 +227,36 @@
         document.getElementById('modal-desc').innerText = c.desc;
         document.getElementById('modal-pts').innerText = c.points + ' Pts';
 
-        // Получаем красивое имя категории из метаданных (по имени)
         const catName = categoriesMeta[c.category] ? categoriesMeta[c.category].name : c.category;
         document.getElementById('modal-cat').innerText = catName.toUpperCase();
         document.getElementById('modal-diff').innerText = c.difficulty;
 
+        const attemptsEl = document.getElementById('modal-attempts');
+        if (c.max_attempts > 0) {
+            attemptsEl.innerText = `Attempts: ${c.attempts}/${c.max_attempts}`;
+        } else {
+            attemptsEl.innerText = `Attempts: ${c.attempts}/∞`;
+        }
+
         const formDiv = document.getElementById('modal-form');
         const solvedDiv = document.getElementById('modal-solved');
+        const failedDiv = document.getElementById('modal-failed');
         const input = document.getElementById('flag-input');
         const feedback = document.getElementById('feedback-msg');
         input.value = '';
         feedback.innerText = '';
         input.classList.remove('border-red-500', 'text-red-500');
 
+        formDiv.classList.add('hidden');
+        solvedDiv.classList.add('hidden');
+        failedDiv.classList.add('hidden');
+
         if(c.solved) {
-            formDiv.classList.add('hidden');
             solvedDiv.classList.remove('hidden');
+        } else if (c.failed) {
+            failedDiv.classList.remove('hidden');
         } else {
             formDiv.classList.remove('hidden');
-            solvedDiv.classList.add('hidden');
         }
 
         document.getElementById('tab-solves-count').innerText = c.solves.length;
@@ -175,7 +266,7 @@
             solvesList.innerHTML = '<div class="text-center text-[#5a6278] text-xs py-10 italic">No solves yet.</div>';
         } else {
             c.solves.forEach(solve => {
-                solvesList.insertAdjacentHTML('beforeend', `<div class="flex justify-between items-center bg-[#13141b] p-3 rounded border border-[#2c2f3b] hover:border-[#5a6278]/50 transition-colors group"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-[#2c2f3b] flex items-center justify-center overflow-hidden border border-[#2c2f3b]"><img src="https://api.dicebear.com/7.x/bottts/svg?seed=${solve.user}" class="w-full h-full object-cover"></div><span class="text-sm font-bold text-white group-hover:text-[#9fef00] transition-colors">${solve.user}</span></div><span class="text-[10px] text-[#5a6278] font-mono">${solve.date}</span></div>`);
+                solvesList.insertAdjacentHTML('beforeend', `<div class="flex justify-between items-center bg-[#13141b] p-3 rounded border border-[#2c2f3b] hover:border-[#5a6278]/50 transition-colors group"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-[#2c2f3b] flex items-center justify-center overflow-hidden border border-[#2c2f3b]"><img src="${solve.avatar}" class="w-full h-full object-cover"></div><span class="text-sm font-bold text-white group-hover:text-[#9fef00] transition-colors">${solve.user}</span></div><span class="text-[10px] text-[#5a6278] font-mono">${solve.date}</span></div>`);
             });
         }
 
@@ -224,18 +315,39 @@
         });
         const data = await response.json();
 
+        const c = challenges.find(i => i.id === activeId);
+
         if(data.status === 'success') {
             feedback.className = 'text-xs mt-3 h-4 font-mono font-bold pl-1 text-[#9fef00]';
             feedback.innerHTML = '<i class="inline w-3 h-3 mr-1" data-lucide="check"></i> ACCESS GRANTED';
-            const c = challenges.find(i => i.id === activeId);
             if(c) c.solved = true;
             lucide.createIcons();
-            setTimeout(() => { closeModal(); renderChallenges(); }, 1000);
+
+            document.getElementById('modal-form').classList.add('hidden');
+            document.getElementById('modal-solved').classList.remove('hidden');
+
+            setTimeout(() => { closeModal(); renderChallenges(); }, 1500);
         } else {
             feedback.className = 'text-xs mt-3 h-4 font-mono font-bold pl-1 text-red-500';
             feedback.innerText = data.message;
             input.classList.add('border-red-500', 'text-red-500');
             setTimeout(() => input.classList.remove('border-red-500', 'text-red-500'), 1000);
+
+            c.attempts = (c.attempts || 0) + 1;
+            const attemptsEl = document.getElementById('modal-attempts');
+            if(c.max_attempts > 0) attemptsEl.innerText = `Attempts: ${c.attempts}/${c.max_attempts}`;
+
+            if (data.challenge_failed) {
+                 c.failed = true;
+
+                 document.getElementById('modal-form').classList.add('hidden');
+                 document.getElementById('modal-failed').classList.remove('hidden');
+
+                 setTimeout(() => {
+                     closeModal();
+                     renderChallenges();
+                 }, 2000);
+            }
         }
     }
 </script>

@@ -41,11 +41,19 @@
              {% for activity in activity_log %}
              <div class="flex items-center justify-between p-4 border-b border-[#2c2f3b]/50 hover:bg-white/5 transition-colors group cursor-default">
                  <div class="flex items-center gap-4">
-                     <div class="p-2 rounded bg-[#9fef00]/10 text-[#9fef00]"><i data-lucide="check-circle" class="w-5 h-5"></i></div>
-                     <div>
-                         <div class="text-white font-bold text-sm group-hover:text-[#9fef00] transition-colors">Solved "{{ activity.challenge.title }}"</div>
-                         <div class="text-[#5a6278] text-xs mt-0.5">{{ activity.challenge.category.name }} • {{ activity.challenge.points }} pts</div>
-                     </div>
+                     {% if activity.type == 'solve' %}
+                         <div class="p-2 rounded bg-[#9fef00]/10 text-[#9fef00]"><i data-lucide="check-circle" class="w-5 h-5"></i></div>
+                         <div>
+                             <div class="text-white font-bold text-sm group-hover:text-[#9fef00] transition-colors">Solved "{{ activity.challenge.title }}"</div>
+                             <div class="text-[#5a6278] text-xs mt-0.5">{{ activity.challenge.category.name }} • {{ activity.challenge.points }} pts</div>
+                         </div>
+                     {% else %}
+                         <div class="p-2 rounded bg-red-500/10 text-red-500"><i data-lucide="x-circle" class="w-5 h-5"></i></div>
+                         <div>
+                             <div class="text-white font-bold text-sm group-hover:text-red-500 transition-colors">Failed "{{ activity.challenge.title }}"</div>
+                             <div class="text-[#5a6278] text-xs mt-0.5">{{ activity.challenge.category.name }} • {{ activity.challenge.points }} pts</div>
+                         </div>
+                     {% endif %}
                  </div>
                  <span class="text-[#5a6278] text-xs font-mono bg-black/30 px-2 py-1 rounded border border-white/5">{{ activity.date|timesince }} ago</span>
              </div>
