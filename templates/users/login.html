@@ -1,54 +1,145 @@
 {% extends 'base.html' %}
 
-{% block header_title %}login{% endblock %}
+{% block header_title %}System Access{% endblock %}
 
 {% block content %}
-<section class="max-w-md mx-auto fade-in py-12">
-    <div class="glass-panel p-8 rounded-2xl border border-[#2c2f3b] shadow-2xl relative overflow-hidden">
-        <!-- Декоративный фон -->
-        <div class="absolute top-0 right-0 w-32 h-32 bg-[#9fef00]/5 rounded-full blur-[50px] -translate-y-1/2 translate-x-1/2"></div>
-        
-        <div class="text-center mb-8 relative z-10">
-            <h2 class="text-3xl font-bold text-white mb-2 tracking-tight">Access Protocol</h2>
-            <p class="text-[#5a6278] text-xs uppercase font-bold tracking-widest">Verify your identity</p>
-        </div>
+<div class="relative min-h-[calc(100vh-80px)] flex items-center justify-center overflow-hidden py-10">
 
-        <form method="POST" class="space-y-5 relative z-10">
-            {% csrf_token %}
-            
-            {% if form.errors %}
-            <div class="bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-3 rounded-lg text-xs flex items-center gap-2">
-                <i data-lucide="alert-triangle" class="w-4 h-4"></i>
-                <span>Invalid credentials. Access denied.</span>
+    <!-- Cyber Grid Background (Consistent with Register page) -->
+    <div class="absolute inset-0 bg-[#050608]">
+        <div class="absolute inset-0 bg-[linear-gradient(rgba(18,20,28,0.5)_2px,transparent_2px),linear-gradient(90deg,rgba(18,20,28,0.5)_2px,transparent_2px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,#000_40%,transparent_100%)]"></div>
+        <div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_800px_at_50%_200px,#9fef0015,transparent)]"></div>
+    </div>
+
+    <!-- Floating Particles -->
+    <div class="absolute top-20 left-10 w-2 h-2 bg-[#9fef00] rounded-full blur-[2px] animate-ping"></div>
+    <div class="absolute bottom-40 right-20 w-1 h-1 bg-blue-500 rounded-full blur-[1px] animate-pulse"></div>
+
+    <!-- Main Card Container -->
+    <div class="relative w-full max-w-md z-10 mx-4">
+
+        <!-- Decorative HUD Corners -->
+        <div class="absolute -top-12 -left-12 w-24 h-24 border-t-2 border-l-2 border-[#9fef00]/30 rounded-tl-3xl"></div>
+        <div class="absolute -bottom-12 -right-12 w-24 h-24 border-b-2 border-r-2 border-[#9fef00]/30 rounded-br-3xl"></div>
+
+        <!-- Glass Card -->
+        <div class="backdrop-blur-xl bg-[#0d0e12]/60 border border-[#2c2f3b] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden">
+
+            <!-- Header Section -->
+            <div class="px-8 pt-8 pb-6 text-center border-b border-[#2c2f3b] bg-[#15171e]/50">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#9fef00]/10 border border-[#9fef00]/20 mb-4 shadow-[0_0_15px_rgba(159,239,0,0.2)]">
+                    <i data-lucide="log-in" class="w-8 h-8 text-[#9fef00]"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-white tracking-tight">System Access</h1>
+                <p class="text-[#5a6278] text-sm mt-2">Enter credentials to proceed</p>
             </div>
-            {% endif %}
 
-            <div>
-                <label class="block text-[10px] font-bold text-[#5a6278] uppercase tracking-widest mb-1.5">Username</label>
-                <div class="flex items-center bg-[#13141b] border border-[#2c2f3b] rounded-lg px-3 py-2.5 focus-within:border-[#9fef00]/50 transition-colors group">
-                    <i data-lucide="user" class="w-4 h-4 text-[#5a6278] mr-3 group-focus-within:text-[#9fef00] transition-colors"></i>
-                    <input type="text" name="username" required autofocus class="bg-transparent text-sm text-white w-full focus:outline-none font-mono placeholder-[#2c2f3b]" placeholder="Enter username">
+            <!-- Form Section -->
+            <div class="p-8">
+                <form method="post" class="space-y-5">
+                    {% csrf_token %}
+
+                    {% if form.errors %}
+                        <div class="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded text-xs flex items-center gap-2">
+                            <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                            <p>Access Denied: Invalid credentials</p>
+                        </div>
+                    {% endif %}
+
+                    <!-- Username Field -->
+                    <div class="space-y-1.5 group">
+                        <label class="block text-[10px] uppercase tracking-widest font-mono text-[#5a6278] group-focus-within:text-[#9fef00] transition-colors">
+                            Username
+                        </label>
+                        <div class="relative group/input">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors">
+                                <i data-lucide="user" class="h-4 w-4 text-[#5a6278] group-focus-within/input:text-[#9fef00]"></i>
+                            </div>
+
+                            <div class="login-input-wrapper">
+                                <input type="text" name="username" class="w-full" required placeholder="Codename">
+                            </div>
+
+                            <!-- Focus Border Animation -->
+                            <div class="absolute bottom-0 left-0 h-[1px] w-0 bg-[#9fef00] transition-all duration-300 group-focus-within/input:w-full"></div>
+                        </div>
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="space-y-1.5 group">
+                        <label class="block text-[10px] uppercase tracking-widest font-mono text-[#5a6278] group-focus-within:text-[#9fef00] transition-colors">
+                            Password
+                        </label>
+                        <div class="relative group/input">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors">
+                                <i data-lucide="key" class="h-4 w-4 text-[#5a6278] group-focus-within/input:text-[#9fef00]"></i>
+                            </div>
+
+                            <div class="login-input-wrapper">
+                                <input type="password" name="password" class="w-full" required placeholder="••••••••">
+                            </div>
+
+                            <!-- Focus Border Animation -->
+                            <div class="absolute bottom-0 left-0 h-[1px] w-0 bg-[#9fef00] transition-all duration-300 group-focus-within/input:w-full"></div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4">
+                        <button type="submit"
+                            class="relative w-full overflow-hidden bg-[#9fef00] hover:bg-[#b0ff1a] text-black font-bold py-3.5 px-4 rounded-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 shadow-[0_4px_14px_0_rgba(159,239,0,0.39)] group">
+                            <span class="relative z-10 flex items-center justify-center gap-2">
+                                AUTHENTICATE
+                                <i data-lucide="arrow-right" class="w-4 h-4 transition-transform group-hover:translate-x-1"></i>
+                            </span>
+                            <!-- Button Shine Effect -->
+                            <div class="absolute top-0 -left-[100%] w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[25deg] transition-all duration-1000 group-hover:left-[100%]"></div>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mt-6 pt-6 border-t border-[#2c2f3b] text-center">
+                    <p class="text-[#5a6278] text-xs font-mono">
+                        NO CREDENTIALS?
+                        <a href="{% url 'register' %}" class="text-[#9fef00] hover:text-white transition-colors ml-1 border-b border-transparent hover:border-[#9fef00]">
+                            INITIATE REGISTRATION
+                        </a>
+                    </p>
                 </div>
             </div>
 
-            <div>
-                <label class="block text-[10px] font-bold text-[#5a6278] uppercase tracking-widest mb-1.5">Password</label>
-                <div class="flex items-center bg-[#13141b] border border-[#2c2f3b] rounded-lg px-3 py-2.5 focus-within:border-[#9fef00]/50 transition-colors group">
-                    <i data-lucide="lock" class="w-4 h-4 text-[#5a6278] mr-3 group-focus-within:text-[#9fef00] transition-colors"></i>
-                    <input type="password" name="password" required class="bg-transparent text-sm text-white w-full focus:outline-none font-mono" placeholder="••••••••">
-                </div>
+            <!-- Bottom Status Bar -->
+            <div class="bg-[#050608]/80 px-4 py-2 flex justify-between items-center text-[10px] font-mono text-[#5a6278] border-t border-[#2c2f3b]">
+                <span class="flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                    GATEWAY: ACTIVE
+                </span>
+                <span>ENCRYPTION: AES-256</span>
             </div>
-
-            <button type="submit" class="w-full bg-[#9fef00] hover:bg-[#8cd600] text-black font-bold py-3 rounded-lg text-sm uppercase tracking-wider transition-all mt-6 shadow-[0_0_20px_rgba(159,239,0,0.3)] hover:shadow-[0_0_30px_rgba(159,239,0,0.5)] flex items-center justify-center gap-2 group">
-                <span>Authenticate</span>
-                <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
-            </button>
-        </form>
-
-        <div class="text-center mt-6 pt-6 border-t border-[#2c2f3b] relative z-10">
-            <p class="text-[#5a6278] text-xs">New to the system?</p>
-            <a href="{% url 'register' %}" class="text-[#9fef00] text-xs font-bold uppercase tracking-wider hover:underline mt-1 block">Initialize Registration</a>
         </div>
     </div>
-</section>
+</div>
+
+<style>
+    .login-input-wrapper input {
+        width: 100%;
+        background-color: rgba(21, 23, 30, 0.4);
+        border: 1px solid #2c2f3b;
+        color: white;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.875rem;
+        border-radius: 0.5rem;
+        padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+        transition: all 0.2s;
+    }
+    .login-input-wrapper input:focus {
+        outline: none;
+        background-color: rgba(21, 23, 30, 0.8);
+        border-color: #9fef00;
+        box-shadow: 0 0 15px rgba(159, 239, 0, 0.1);
+    }
+    .login-input-wrapper input::placeholder {
+        color: #4b5563;
+        font-family: sans-serif;
+    }
+</style>
 {% endblock %}

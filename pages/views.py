@@ -2,8 +2,8 @@ from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from django.db.models import Sum, Count
-from django.db.models.functions import TruncDate
+from django.db.models import Sum, Count, Min
+from django.db.models.functions import TruncDate, Coalesce
 from .models import Challenge, Category, Solve, Attempt
 from users.models import User
 import json
@@ -17,8 +17,9 @@ def dashboard(request):
     owned_flags = user_solves.count()
     total_flags = Challenge.objects.count()
 
-    # 1. Получаем глобальные решения (Успехи всех)
-    solves_qs = Solve.objects.select_related('user', 'challenge', 'challenge__category').order_by('-date')[:20]
+    # 1. Получаем ЛИЧНЫЕ решения (только текущего пользователя)
+    solves_qs = Solve.objects.filter(user=request.user).select_related('user', 'challenge',
+                                                                       'challenge__category').order_by('-date')[:20]
 
     # 2. Получаем ЛИЧНЫЕ провалы
     attempts_qs = Attempt.objects.filter(
@@ -63,6 +64,7 @@ def dashboard(request):
             'sort_date': f.timestamp
         })
 
+    # Сортируем по дате (сначала новые) и берем последние 10 событий
     activity_log = sorted(activity_list, key=lambda x: x['sort_date'], reverse=True)[:10]
 
     context = {
@@ -97,11 +99,12 @@ def challenges_view(request):
 
     challenges_data = []
     for c in challenges:
+        # Убрано ограничение среза ([:10]), теперь показываются ВСЕ решившие
         solves_list = [{
             'user': s.user.username,
             'avatar': s.user.avatar_url,
             'date': s.date.strftime('%Y-%m-%d %H:%M')
-        } for s in c.solves.select_related('user').order_by('-date')[:5]]
+        } for s in c.solves.select_related('user').order_by('-date')]
 
         is_solved = c.id in user_solves_ids
         attempts_count = user_attempts_map.get(c.id, 0)
@@ -137,15 +140,19 @@ def challenges_view(request):
 def scoreboard(request):
     # 1. Получаем ТОП-10 пользователей для графика
     top_users_qs = User.objects.annotate(
-        total_points=Sum('solves__challenge__points'),
+        total_points=Coalesce(Sum('solves__challenge__points'), 0),
         flags_count=Count('solves')
     ).order_by('-total_points', '-flags_count')[:10]
 
     top_users_list = list(top_users_qs)
 
+    # Если текущий пользователь не в топ-10, добавляем его в список для графика
+    if request.user.is_authenticated and request.user not in top_users_list:
+        top_users_list.append(request.user)
+
     # 2. Получаем ПОЛНЫЙ список для таблицы (топ-50)
     all_users_qs = User.objects.annotate(
-        total_points=Sum('solves__challenge__points'),
+        total_points=Coalesce(Sum('solves__challenge__points'), 0),
         flags_count=Count('solves')
     ).order_by('-total_points', '-flags_count')[:50]
 
@@ -154,16 +161,18 @@ def scoreboard(request):
         leaderboard_data.append({
             'rank': index,
             'user': u.username,
-            'points': u.total_points or 0,
+            'points': u.total_points,
             'solved': u.flags_count,
             'isMe': u == request.user,
             'avatar': u.avatar_url
         })
 
-    # 3. Подготовка данных для графика (Relative Time vs Score)
-    graph_data = {
-        'datasets': []
-    }
+    # 3. Подготовка данных для графика
+    graph_data = {'datasets': []}
+
+    # Находим глобальное время старта (самое первое решение на сервере)
+    first_solve_ever = Solve.objects.aggregate(Min('date'))['date__min']
+    global_start_time = first_solve_ever if first_solve_ever else timezone.now()
 
     colors = [
         '#9fef00', '#00d2ff', '#ff0055', '#ffe600', '#aa00ff',
@@ -173,43 +182,57 @@ def scoreboard(request):
     for i, user in enumerate(top_users_list):
         solves = Solve.objects.filter(user=user).select_related('challenge').order_by('date')
 
+        color = colors[i % len(colors)]
+
         if not solves.exists():
+            graph_data['datasets'].append({
+                'label': user.username,
+                'data': [{'x': 0, 'y': 0}],
+                'borderColor': color,
+                'backgroundColor': 'transparent',
+                'borderWidth': 2,
+                'tension': 0,
+                'pointRadius': 0,
+                'stepped': 'after'
+            })
             continue
 
-        # Определяем время старта (первое решение)
-        start_time = solves[0].date
-
-        # Первая точка: 0 часов, 0 очков
         data_points = [{'x': 0, 'y': 0}]
         current_score = 0
 
         for solve in solves:
             current_score += solve.challenge.points
 
-            # Вычисляем, сколько часов прошло с момента старта
-            time_delta = solve.date - start_time
-            hours_elapsed = round(time_delta.total_seconds() / 3600, 2)  # Часы с сотыми долями
+            # Вычисляем время от ГЛОБАЛЬНОГО старта
+            time_delta = solve.date - global_start_time
+            seconds_elapsed = int(time_delta.total_seconds())
 
-            data_points.append({'x': hours_elapsed, 'y': current_score})
+            if seconds_elapsed < 0:
+                seconds_elapsed = 0
+
+            data_points.append({'x': seconds_elapsed, 'y': current_score})
+
+        # Добавляем финальную точку "сейчас"
+        now_delta = timezone.now() - global_start_time
+        now_seconds = int(now_delta.total_seconds())
+        data_points.append({'x': now_seconds, 'y': current_score})
 
         graph_data['datasets'].append({
             'label': user.username,
             'data': data_points,
-            'borderColor': colors[i % len(colors)],
+            'borderColor': color,
             'backgroundColor': 'transparent',
             'borderWidth': 2,
-            'tension': 0.2,  # Легкое сглаживание
+            'tension': 0,
             'pointRadius': 3,
             'pointHoverRadius': 6,
-            'showLine': True
+            'showLine': True,
+            'stepped': 'after'
         })
-
-    # Примечание: Для Chart.js при использовании объектов {x, y} метки labels не обязательны,
-    # график автоматически построит линейную ось X.
 
     context = {
         'leaderboard_data': leaderboard_data,
-        'graph_data_json': json.dumps(graph_data)
+        'graph_data': graph_data
     }
     return render(request, 'scoreboard.html', context)
 

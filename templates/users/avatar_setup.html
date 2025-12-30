@@ -1,57 +1,121 @@
 {% extends 'base.html' %}
 
-{% block header_title %}setup{% endblock %}
+{% block header_title %}Visual Calibration{% endblock %}
 
 {% block content %}
-<section class="max-w-4xl mx-auto fade-in py-8">
-    <div class="glass-panel p-1 rounded-2xl border border-[#2c2f3b] shadow-2xl">
-        <div class="p-6 border-b border-[#2c2f3b] flex items-center justify-between bg-[#1a1c23]">
-            <div>
-                <h3 class="font-bold text-white text-xl flex items-center gap-2">
-                    <i data-lucide="user-check" class="w-5 h-5 text-[#9fef00]"></i> Identify Yourself
-                </h3>
-                <p class="text-[#5a6278] text-xs mt-1">Select an avatar for your profile. You can change this later.</p>
+<div class="relative min-h-[calc(100vh-80px)] flex items-center justify-center overflow-hidden py-10">
+
+    <!-- Cyber Grid Background (Consistent with Register page) -->
+    <div class="absolute inset-0 bg-[#050608]">
+        <div class="absolute inset-0 bg-[linear-gradient(rgba(18,20,28,0.5)_2px,transparent_2px),linear-gradient(90deg,rgba(18,20,28,0.5)_2px,transparent_2px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,#000_40%,transparent_100%)]"></div>
+        <div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_800px_at_50%_200px,#9fef0010,transparent)]"></div>
+    </div>
+
+    <!-- Floating Particles -->
+    <div class="absolute top-20 left-10 w-2 h-2 bg-[#9fef00] rounded-full blur-[2px] animate-ping"></div>
+    <div class="absolute bottom-40 right-20 w-1 h-1 bg-blue-500 rounded-full blur-[1px] animate-pulse"></div>
+
+    <!-- Main Container (Wider for grid) -->
+    <div class="relative w-full max-w-5xl z-10 mx-4">
+
+        <!-- Decorative HUD Corners -->
+        <div class="absolute -top-6 -left-6 w-12 h-12 border-t-2 border-l-2 border-[#9fef00]/30"></div>
+        <div class="absolute -bottom-6 -right-6 w-12 h-12 border-b-2 border-r-2 border-[#9fef00]/30"></div>
+
+        <!-- Glass Panel -->
+        <div class="backdrop-blur-xl bg-[#0d0e12]/80 border border-[#2c2f3b] rounded-xl shadow-2xl overflow-hidden">
+
+            <!-- Header -->
+            <div class="p-6 border-b border-[#2c2f3b] flex items-center justify-between bg-[#15171e]/50">
+                <div>
+                    <h2 class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                        <i data-lucide="scan-face" class="text-[#9fef00]"></i>
+                        Visual Calibration
+                    </h2>
+                    <p class="text-[#5a6278] text-xs font-mono mt-1">SELECT_DIGITAL_PROJECTION</p>
+                </div>
+
+                <!-- Skip Button -->
+                <form method="POST" action="{% url 'avatar_setup' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="skip">
+                    <button type="submit" class="group flex items-center gap-2 px-4 py-2 bg-[#1a1c23] hover:bg-[#2c2f3b] border border-[#2c2f3b] hover:border-red-500/50 rounded transition-all">
+                        <span class="text-[#5a6278] group-hover:text-red-400 text-xs font-mono">SKIP_SETUP</span>
+                        <i data-lucide="fast-forward" class="w-3 h-3 text-[#5a6278] group-hover:text-red-400"></i>
+                    </button>
+                </form>
             </div>
-            <form method="POST" action="{% url 'avatar_setup' %}">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="skip">
-                <button type="submit" class="text-[#5a6278] hover:text-white text-xs font-bold uppercase tracking-widest border border-[#2c2f3b] hover:bg-white/5 px-4 py-2 rounded transition-colors">
-                    Skip Setup <i data-lucide="arrow-right" class="w-3 h-3 inline ml-1"></i>
-                </button>
-            </form>
-        </div>
-        
-        <div class="p-8">
-            <form method="POST" id="avatar-form" class="hidden">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="save">
-                <input type="hidden" name="avatar_url" id="avatar-input">
-            </form>
 
-            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-6">
-                <script>
-                    const avatars = ['Felix', 'Aneka', 'Zack', 'Midnight', 'Shadow', 'Cyber', 'Glitch', 'Neo', 'Flux', 'Echo', 'Byte', 'Pixel', 'Vortex', 'Spark', 'Nova', 'Blade', 'Phantom', 'Ghost'];
-                    
-                    avatars.forEach((seed, index) => {
-                        const url = `https://api.dicebear.com/7.x/bottts/svg?seed=${seed}`;
-                        const delay = index * 0.05;
-                        document.write(`
-                            <div onclick="selectAvatar('${url}')" 
-                                 class="cursor-pointer group relative aspect-square rounded-xl bg-[#13141b] border-2 border-[#2c2f3b] hover:border-[#9fef00] hover:shadow-[0_0_15px_rgba(159,239,0,0.3)] hover:scale-105 transition-all duration-300 overflow-hidden fade-in"
-                                 style="animation-delay: ${delay}s">
-                                <img src="${url}" class="w-full h-full object-cover">
-                                <div class="absolute inset-0 bg-[#9fef00]/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            </div>
-                        `);
-                    });
+            <!-- Content Area -->
+            <div class="p-8">
+                <!-- Hidden Form -->
+                <form method="POST" id="avatar-form" class="hidden">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="save">
+                    <input type="hidden" name="avatar_url" id="avatar-input">
+                </form>
 
-                    function selectAvatar(url) {
-                        document.getElementById('avatar-input').value = url;
-                        document.getElementById('avatar-form').submit();
-                    }
-                </script>
+                <!-- Avatar Grid -->
+                <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 sm:gap-6" id="avatar-grid">
+                    <!-- JS Generated content -->
+                </div>
+            </div>
+
+            <!-- Footer Status -->
+            <div class="bg-[#050608]/80 px-4 py-2 flex justify-between items-center text-[10px] font-mono text-[#5a6278] border-t border-[#2c2f3b]">
+                <span>STATUS: WAITING_SELECTION</span>
+                <span class="flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#9fef00] animate-pulse"></span>
+                    SYSTEM_READY
+                </span>
             </div>
         </div>
     </div>
-</section>
+</div>
+
+<script>
+    const avatars = ['Felix', 'Aneka', 'Zack', 'Midnight', 'Shadow', 'Cyber', 'Glitch', 'Neo', 'Flux', 'Echo', 'Byte', 'Pixel', 'Vortex', 'Spark', 'Nova', 'Blade', 'Phantom', 'Ghost'];
+    const gridContainer = document.getElementById('avatar-grid');
+
+    avatars.forEach((seed, index) => {
+        const url = `https://api.dicebear.com/7.x/bottts/svg?seed=${seed}`;
+        const delay = index * 0.05;
+
+        const card = document.createElement('div');
+        // Стили карточки адаптированы под киберпанк тему:
+        // bg-[#15171e] - темный фон
+        // border-[#2c2f3b] - темная рамка
+        // hover:border-[#9fef00] - неоновая рамка при наведении
+        // hover:shadow-[...] - свечение
+        card.className = `cursor-pointer group relative aspect-square rounded-xl bg-[#15171e] border border-[#2c2f3b] hover:border-[#9fef00] hover:shadow-[0_0_20px_rgba(159,239,0,0.2)] hover:-translate-y-1 transition-all duration-300 overflow-hidden fade-in`;
+        card.style.animationDelay = `${delay}s`;
+        card.onclick = () => selectAvatar(url);
+
+        card.innerHTML = `
+            <img src="${url}" class="w-full h-full object-cover p-2 opacity-80 group-hover:opacity-100 transition-opacity duration-300">
+            <!-- Эффект сканирования при наведении -->
+            <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#9fef00]/10 to-transparent translate-y-[-100%] group-hover:translate-y-[100%] transition-transform duration-700 pointer-events-none"></div>
+            <!-- Уголок выбора -->
+            <div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#2c2f3b] group-hover:bg-[#9fef00] transition-colors duration-300"></div>
+        `;
+
+        gridContainer.appendChild(card);
+    });
+
+    function selectAvatar(url) {
+        document.getElementById('avatar-input').value = url;
+        document.getElementById('avatar-form').submit();
+    }
+</script>
+
+<style>
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in {
+        animation: fadeIn 0.5s ease-out forwards;
+        opacity: 0; /* Начальное состояние */
+    }
+</style>
 {% endblock %}
