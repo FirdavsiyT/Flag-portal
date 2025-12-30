@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'users.apps.UsersConfig',
     'pages.apps.PagesConfig',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -68,7 +69,16 @@ TEMPLATES = [
     },
 ]
 
+# Указываем ASGI приложение вместо WSGI
+ASGI_APPLICATION = 'config.asgi.application'
 WSGI_APPLICATION = 'config.wsgi.application'
+
+# Настройка Channels (In-Memory для разработки)
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
 
 
 # Database
