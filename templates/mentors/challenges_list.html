@@ -1,64 +1,196 @@
 {% extends 'mentors/base_mentor.html' %}
 
 {% block mentor_content %}
-<div class="flex justify-between items-center mb-6">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
     <h2 class="text-2xl font-bold text-white">Manage Challenges</h2>
-    <a href="{% url 'mentors:challenge_create' %}" class="bg-[#9fef00] hover:bg-[#8cd600] text-black font-bold py-2 px-4 rounded text-sm flex items-center gap-2 transition-all">
-        <i data-lucide="plus" class="w-4 h-4"></i> Create New
-    </a>
-</div>
+    <div class="flex gap-3">
+        <!-- Кнопка глобального отключения -->
+        <button onclick="document.getElementById('disable-all-modal').classList.remove('hidden')" class="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 font-bold py-2 px-4 rounded text-sm flex items-center gap-2 transition-all shadow-lg hover:shadow-red-500/20">
+            <i data-lucide="eye-off" class="w-4 h-4"></i> HIDE ALL
+        </button>
 
-<div class="glass-panel rounded-xl border border-[#2c2f3b] overflow-hidden">
-    <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm">
-            <thead class="bg-[#1a1c23] text-[#5a6278] font-mono text-xs uppercase">
-                <tr>
-                    <th class="px-4 py-3">ID</th>
-                    <th class="px-4 py-3">Title</th>
-                    <th class="px-4 py-3">Category</th>
-                    <th class="px-4 py-3">Pts</th>
-                    <th class="px-4 py-3">Difficulty</th>
-                    <th class="px-4 py-3 text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-[#2c2f3b]">
-                {% for challenge in challenges %}
-                <tr class="group hover:bg-white/5 transition-colors">
-                    <td class="px-4 py-3 font-mono text-[#5a6278]">#{{ challenge.id }}</td>
-                    <td class="px-4 py-3 font-bold text-white">{{ challenge.title }}</td>
-                    <td class="px-4 py-3">
-                        <span class="px-2 py-0.5 rounded bg-[#2c2f3b] text-[#9ca3af] text-xs border border-[#3f4454]">{{ challenge.category.name }}</span>
-                    </td>
-                    <td class="px-4 py-3 font-mono text-[#9fef00]">{{ challenge.points }}</td>
-                    <td class="px-4 py-3">
-                        <span class="px-2 py-0.5 rounded text-xs font-bold uppercase
-                            {% if challenge.difficulty == 'Easy' %}text-green-500 bg-green-500/10
-                            {% elif challenge.difficulty == 'Medium' %}text-yellow-500 bg-yellow-500/10
-                            {% else %}text-red-500 bg-red-500/10{% endif %}">
-                            {{ challenge.difficulty }}
-                        </span>
-                    </td>
-                    <td class="px-4 py-3 text-right">
-                        <div class="flex items-center justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                            <a href="{% url 'mentors:challenge_edit' challenge.id %}" class="p-1.5 hover:bg-[#2c2f3b] rounded text-blue-400 transition-colors" title="Edit">
-                                <i data-lucide="edit-3" class="w-4 h-4"></i>
-                            </a>
-                            <a href="{% url 'mentors:challenge_delete' challenge.id %}" class="p-1.5 hover:bg-[#2c2f3b] rounded text-red-400 transition-colors" title="Delete">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="6" class="px-4 py-12 text-center text-[#5a6278]">
-                        <i data-lucide="folder-open" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
-                        No challenges found.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <a href="{% url 'mentors:challenge_create' %}" class="bg-[#9fef00] hover:bg-[#8cd600] text-black font-bold py-2 px-4 rounded text-sm flex items-center gap-2 transition-all">
+            <i data-lucide="plus" class="w-4 h-4"></i> Create New
+        </a>
     </div>
 </div>
+
+<!-- Toolbar: Filters and Bulk Actions -->
+<form id="bulk-action-form" action="{% url 'mentors:bulk_challenges_action' %}" method="POST">
+    {% csrf_token %}
+    <input type="hidden" name="action" id="bulk-action-input">
+
+    <div class="glass-panel p-3 mb-4 rounded-lg flex flex-wrap items-center justify-between gap-4 border border-[#2c2f3b]">
+        <!-- Left: Filters -->
+        <div class="flex items-center gap-3 text-sm">
+            <div class="flex items-center gap-2">
+                <span class="text-[#5a6278] font-bold text-xs uppercase">Filter:</span>
+                <select onchange="window.location.href=this.value" class="bg-[#13141b] text-white border border-[#2c2f3b] rounded px-3 py-1.5 focus:border-[#9fef00] outline-none text-xs">
+                    <option value="?sort={{ current_sort }}" {% if not current_category %}selected{% endif %}>All Categories</option>
+                    {% for cat in categories %}
+                    <option value="?category={{ cat.name }}&sort={{ current_sort }}" {% if current_category == cat.name %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <span class="text-[#5a6278] font-bold text-xs uppercase">Sort:</span>
+                <select onchange="window.location.href=this.value" class="bg-[#13141b] text-white border border-[#2c2f3b] rounded px-3 py-1.5 focus:border-[#9fef00] outline-none text-xs">
+                    <option value="?sort=newest{% if current_category %}&category={{ current_category }}{% endif %}" {% if current_sort == 'newest' %}selected{% endif %}>Newest First</option>
+                    <option value="?sort=category{% if current_category %}&category={{ current_category }}{% endif %}" {% if current_sort == 'category' %}selected{% endif %}>Category (A-Z)</option>
+                    <option value="?sort=points_asc{% if current_category %}&category={{ current_category }}{% endif %}" {% if current_sort == 'points_asc' %}selected{% endif %}>Points (Low to High)</option>
+                    <option value="?sort=points_desc{% if current_category %}&category={{ current_category }}{% endif %}" {% if current_sort == 'points_desc' %}selected{% endif %}>Points (High to Low)</option>
+                    <option value="?sort=active{% if current_category %}&category={{ current_category }}{% endif %}" {% if current_sort == 'active' %}selected{% endif %}>Active First</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Right: Bulk Actions (Hidden by default, shown via JS when checked) -->
+        <div id="bulk-actions" class="hidden flex items-center gap-2 animate-in fade-in slide-in-from-right-4 duration-300">
+            <span class="text-[#5a6278] text-xs font-mono mr-2"><span id="selected-count">0</span> selected</span>
+            <button type="button" onclick="submitBulkAction('enable_selected')" class="px-3 py-1.5 rounded bg-[#2c2f3b] hover:bg-[#9fef00] hover:text-black text-white text-xs font-bold border border-white/10 transition-colors flex items-center gap-2">
+                <i data-lucide="eye" class="w-3 h-3"></i> Enable
+            </button>
+            <button type="button" onclick="submitBulkAction('disable_selected')" class="px-3 py-1.5 rounded bg-[#2c2f3b] hover:bg-[#5a6278] text-white text-xs font-bold border border-white/10 transition-colors flex items-center gap-2">
+                <i data-lucide="eye-off" class="w-3 h-3"></i> Disable
+            </button>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="glass-panel rounded-xl border border-[#2c2f3b] overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-[#1a1c23] text-[#5a6278] font-mono text-xs uppercase">
+                    <tr>
+                        <th class="px-4 py-3 w-10">
+                            <input type="checkbox" id="select-all" class="rounded bg-[#13141b] border-[#2c2f3b] text-[#9fef00] focus:ring-0 focus:ring-offset-0 cursor-pointer">
+                        </th>
+                        <th class="px-4 py-3">Status</th>
+                        <th class="px-4 py-3">Title</th>
+                        <th class="px-4 py-3">Category</th>
+                        <th class="px-4 py-3">Pts</th>
+                        <th class="px-4 py-3 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[#2c2f3b]">
+                    {% for challenge in challenges %}
+                    <tr class="group hover:bg-white/5 transition-colors">
+                        <td class="px-4 py-3">
+                            <input type="checkbox" name="challenge_ids" value="{{ challenge.id }}" class="challenge-checkbox rounded bg-[#13141b] border-[#2c2f3b] text-[#9fef00] focus:ring-0 focus:ring-offset-0 cursor-pointer">
+                        </td>
+                        <td class="px-4 py-3">
+                            <!-- Single Toggle (Existing) -->
+                             <button type="submit" form="single-toggle-{{ challenge.id }}" class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none {% if challenge.is_active %}bg-[#9fef00]{% else %}bg-[#2c2f3b]{% endif %}" title="Toggle Visibility">
+                                <span class="sr-only">Toggle Active</span>
+                                <span class="inline-block h-3 w-3 transform rounded-full bg-white transition-transform {% if challenge.is_active %}translate-x-5{% else %}translate-x-1{% endif %}"></span>
+                            </button>
+                        </td>
+                        <td class="px-4 py-3 font-bold text-white">
+                            {{ challenge.title }}
+                            <div class="text-[10px] text-[#5a6278] font-mono font-normal">ID: {{ challenge.id }}</div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-0.5 rounded bg-[#2c2f3b] text-[#9ca3af] text-xs border border-[#3f4454]">{{ challenge.category.name }}</span>
+                        </td>
+                        <td class="px-4 py-3 font-mono text-[#9fef00]">{{ challenge.points }}</td>
+                        <td class="px-4 py-3 text-right">
+                            <div class="flex items-center justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                                <a href="{% url 'mentors:challenge_edit' challenge.id %}" class="p-1.5 hover:bg-[#2c2f3b] rounded text-blue-400 transition-colors" title="Edit">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                </a>
+                                <a href="{% url 'mentors:challenge_delete' challenge.id %}" class="p-1.5 hover:bg-[#2c2f3b] rounded text-red-400 transition-colors" title="Delete">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-4 py-12 text-center text-[#5a6278]">
+                            <i data-lucide="folder-open" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                            No challenges found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</form>
+
+<!-- Single Toggle Forms (Invisible, outside main form to avoid nesting) -->
+{% for challenge in challenges %}
+<form id="single-toggle-{{ challenge.id }}" action="{% url 'mentors:challenge_toggle' challenge.id %}" method="POST" class="hidden">{% csrf_token %}</form>
+{% endfor %}
+
+<!-- DISABLE ALL MODAL -->
+<!-- Изменено: flex items-start (было center), pt-20 (отступ сверху), чтобы окно было выше -->
+<div id="disable-all-modal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-start justify-center pt-20 p-4 backdrop-blur-sm overflow-y-auto">
+    <div class="glass-panel w-full max-w-md rounded-xl border-2 border-red-500 shadow-[0_0_50px_rgba(239,68,68,0.2)] overflow-hidden relative animate-in fade-in zoom-in duration-200">
+        <div class="p-6 bg-red-500/10 border-b border-red-500/20 text-center">
+            <div class="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4 text-red-500 animate-pulse">
+                <i data-lucide="eye-off" class="w-10 h-10"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-white uppercase tracking-wider">Lockdown Mode</h2>
+            <p class="text-red-400 font-bold mt-1">HIDE ALL CHALLENGES</p>
+        </div>
+        <div class="p-6">
+            <p class="text-[#9ca3af] mb-4 text-center text-sm leading-relaxed">
+                This action will set <span class="text-white font-bold">ALL CHALLENGES</span> to inactive status.
+            </p>
+            <form action="{% url 'mentors:disable_all_challenges' %}" method="post" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="confirm" value="CONFIRM_DISABLE">
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="document.getElementById('disable-all-modal').classList.add('hidden')" class="flex-1 py-3 rounded bg-[#2c2f3b] text-white hover:bg-[#3f4454] transition-colors font-bold text-sm">CANCEL</button>
+                    <button type="submit" class="flex-1 py-3 rounded bg-red-600 text-white hover:bg-red-700 transition-colors font-bold text-sm shadow-lg shadow-red-600/20">HIDE EVERYTHING</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // JS для управления чекбоксами
+    document.addEventListener('DOMContentLoaded', () => {
+        const selectAll = document.getElementById('select-all');
+        const checkboxes = document.querySelectorAll('.challenge-checkbox');
+        const bulkActions = document.getElementById('bulk-actions');
+        const selectedCount = document.getElementById('selected-count');
+
+        function updateUI() {
+            const checked = document.querySelectorAll('.challenge-checkbox:checked');
+            selectedCount.innerText = checked.length;
+
+            if (checked.length > 0) {
+                bulkActions.classList.remove('hidden');
+            } else {
+                bulkActions.classList.add('hidden');
+            }
+        }
+
+        selectAll.addEventListener('change', (e) => {
+            checkboxes.forEach(cb => cb.checked = e.target.checked);
+            updateUI();
+        });
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', () => {
+                updateUI();
+                // Если сняли галочку с одного, снимаем с "Select All"
+                if (!cb.checked) selectAll.checked = false;
+                // Если выбрали все вручную, ставим галочку на "Select All"
+                if (document.querySelectorAll('.challenge-checkbox:checked').length === checkboxes.length) {
+                    selectAll.checked = true;
+                }
+            });
+        });
+    });
+
+    function submitBulkAction(actionName) {
+        document.getElementById('bulk-action-input').value = actionName;
+        document.getElementById('bulk-action-form').submit();
+    }
+</script>
 {% endblock %}

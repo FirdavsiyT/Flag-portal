@@ -1,0 +1,55 @@
+{% extends 'mentors/base_mentor.html' %}
+
+{% block mentor_content %}
+<div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold text-white">Categories</h2>
+    <a href="{% url 'mentors:category_create' %}" class="bg-[#2c2f3b] hover:bg-white hover:text-black border border-white/20 text-white font-bold py-2 px-4 rounded text-sm flex items-center gap-2 transition-all">
+        <i data-lucide="plus" class="w-4 h-4"></i> Add Category
+    </a>
+</div>
+
+<div class="glass-panel rounded-xl border border-[#2c2f3b] overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+            <thead class="bg-[#1a1c23] text-[#5a6278] font-mono text-xs uppercase">
+                <tr>
+                    <th class="px-4 py-3">Name</th>
+                    <th class="px-4 py-3">Challenges Count</th>
+                    <th class="px-4 py-3 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-[#2c2f3b]">
+                {% for category in categories %}
+                <tr class="group hover:bg-white/5 transition-colors">
+                    <td class="px-4 py-3 font-bold text-white text-lg tracking-tight">
+                        {{ category.name }}
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="px-2 py-1 rounded bg-[#13141b] border border-[#2c2f3b] text-[#9ca3af] font-mono text-xs">
+                            {{ category.challenge_count }} tasks
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                        <div class="flex items-center justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                            <a href="{% url 'mentors:category_edit' category.id %}" class="p-1.5 hover:bg-[#2c2f3b] rounded text-blue-400 transition-colors" title="Edit">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </a>
+                            <a href="{% url 'mentors:category_delete' category.id %}" class="p-1.5 hover:bg-[#2c2f3b] rounded text-red-400 transition-colors" title="Delete">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="px-4 py-12 text-center text-[#5a6278]">
+                        <i data-lucide="folder" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                        No categories found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

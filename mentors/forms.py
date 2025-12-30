@@ -1,5 +1,5 @@
 from django import forms
-from pages.models import Challenge
+from pages.models import Challenge, Category
 
 class ChallengeForm(forms.ModelForm):
     class Meta:
@@ -14,4 +14,12 @@ class ChallengeForm(forms.ModelForm):
             'flag': forms.TextInput(attrs={'class': 'w-full bg-[#13141b] border border-[#2c2f3b] rounded p-2 text-white focus:border-[#9fef00] outline-none font-mono'}),
             'max_attempts': forms.NumberInput(attrs={'class': 'w-full bg-[#13141b] border border-[#2c2f3b] rounded p-2 text-white focus:border-[#9fef00] outline-none'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'w-4 h-4 bg-[#13141b] border border-[#2c2f3b] rounded focus:ring-[#9fef00]'}),
+        }
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'w-full bg-[#13141b] border border-[#2c2f3b] rounded p-2 text-white focus:border-[#9fef00] outline-none', 'placeholder': 'e.g. Web Security'}),
         }

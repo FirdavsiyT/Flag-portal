@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from django.db.models import Sum, Count, Min
+from django.db.models import Sum, Count, Min, Q
 from django.db.models.functions import TruncDate, Coalesce
 from .models import Challenge, Category, Solve, Attempt
 from users.models import User
@@ -15,7 +15,10 @@ from django.utils import timezone
 def dashboard(request):
     user_solves = Solve.objects.filter(user=request.user)
     owned_flags = user_solves.count()
-    total_flags = Challenge.objects.count()
+
+    # Считаем только АКТИВНЫЕ задачи в общем количестве (или все, зависит от логики,
+    # но обычно процент прогресса считается от доступных задач)
+    total_flags = Challenge.objects.filter(is_active=True).count()
 
     # 1. Получаем ЛИЧНЫЕ решения (только текущего пользователя)
     solves_qs = Solve.objects.filter(user=request.user).select_related('user', 'challenge',
@@ -67,23 +70,31 @@ def dashboard(request):
     # Сортируем по дате (сначала новые) и берем последние 10 событий
     activity_log = sorted(activity_list, key=lambda x: x['sort_date'], reverse=True)[:10]
 
+    # Проверка на ментора/админа
+    is_mentor = request.user.is_superuser or request.user.groups.filter(name='Mentors').exists()
+
     context = {
         'owned_flags': owned_flags,
         'total_flags': total_flags,
         'activity_log': activity_log,
-        'progress_percent': int((owned_flags / total_flags * 100)) if total_flags > 0 else 0
+        'progress_percent': int((owned_flags / total_flags * 100)) if total_flags > 0 else 0,
+        'is_mentor': is_mentor,  # Передаем флаг в шаблон
     }
     return render(request, 'dashboard.html', context)
 
 
 @login_required
 def challenges_view(request):
-    challenges = Challenge.objects.select_related('category').all()
-    categories_qs = Category.objects.all()
+    # 1. Получаем только АКТИВНЫЕ задачи
+    challenges = Challenge.objects.filter(is_active=True).select_related('category')
+
+    # 2. Получаем категории, у которых есть хотя бы одна АКТИВНАЯ задача
+    # distinct() нужен, чтобы категория не повторялась, если в ней несколько задач
+    categories_qs = Category.objects.filter(challenges__is_active=True).distinct()
 
     categories_data = {}
     for cat in categories_qs:
-        icon = 'folder'
+        icon = 'folder'  # Можно вернуть иконку, если она есть в модели
 
         categories_data[cat.name] = {
             'name': cat.name,
@@ -245,7 +256,9 @@ def submit_flag(request):
         challenge_id = data.get('challenge_id')
         flag_input = data.get('flag')
 
-        challenge = get_object_or_404(Challenge, id=challenge_id)
+        # Проверяем, что задача существует И она активна
+        # Студент не должен иметь возможность сдать флаг для скрытой задачи через API
+        challenge = get_object_or_404(Challenge, id=challenge_id, is_active=True)
 
         attempts_count = Attempt.objects.filter(user=request.user, challenge=challenge).count()
 

@@ -3,6 +3,28 @@
 {% block header_title %}dashboard{% endblock %}
 
 {% block content %}
+{% if is_mentor %}
+<div class="max-w-7xl mx-auto mb-6 fade-in">
+    <div class="glass-panel rounded-xl p-4 border border-[#9fef00]/50 bg-[#9fef00]/5 flex flex-col md:flex-row items-center justify-between gap-4 relative overflow-hidden">
+        <div class="flex items-center gap-4 relative z-10">
+            <div class="p-3 bg-[#9fef00]/20 rounded-full text-[#9fef00] animate-pulse">
+                <i data-lucide="shield-alert" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h3 class="text-white font-bold text-lg">Admin Access Detected</h3>
+                <p class="text-[#9ca3af] text-sm">You have privileges to manage challenges and users.</p>
+            </div>
+        </div>
+        <a href="{% url 'mentors:dashboard' %}" class="relative z-10 bg-[#9fef00] hover:bg-[#8cd600] text-black font-bold py-2 px-6 rounded transition-all shadow-[0_0_15px_rgba(159,239,0,0.3)] hover:shadow-[0_0_25px_rgba(159,239,0,0.5)] flex items-center gap-2">
+            <span>ENTER ADMIN CONSOLE</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </a>
+
+        <!-- Background Decor -->
+        <div class="absolute -right-10 -top-10 w-32 h-32 bg-[#9fef00]/10 rounded-full blur-xl"></div>
+    </div>
+</div>
+{% endif %}
 <section class="max-w-7xl mx-auto fade-in">
      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
          <!-- Owned Flags -->
